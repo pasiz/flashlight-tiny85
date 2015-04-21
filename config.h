@@ -8,5 +8,7 @@
 #define VOLTAGE_PULSE_WIDTH_MS	200
 #define VOLTAGE_DIGIT_DELAY_MS	400
 
+#define VOLTAGE_CUTOFF_MV		2700
+
 #define POWER_STEPS		5
 const uint8_t powerLevel[] = { 5 , 50 , 100 , 200 , 255 };

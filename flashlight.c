@@ -127,7 +127,7 @@ void setup()
 
 void loop()
 {
-	if(vcc() <= 2700)
+	if(vcc() <= VOLTAGE_CUTOFF_MV)
 		shutDown = 1;
 	if(shutDown == 0){
 		handleinput();
