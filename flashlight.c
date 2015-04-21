@@ -1,5 +1,6 @@
 #include "flashlight.h"
 
+#ifdef VOLTAGE_DISPLAY
 void showVoltage() {
 	uint16_t voltage;
 	uint8_t digits[4];
@@ -25,6 +26,7 @@ void showVoltage() {
 	pwm_enable();
 	
 }
+#endif
 
 
 void handleinput() {
@@ -46,10 +48,12 @@ void handleinput() {
 				pwm_enable();
 				inputState = 3;
 			break;
+			#ifdef VOLTAGE_DISPLAY
 			case VOLTAGE_PRESS:
 				showVoltage();
 				inputState = 0;
 			break;
+			#endif
 		}
 		_delay_ms(10);
 	}
@@ -77,7 +81,7 @@ void sleep() {
     PCMSK &= ~_BV(PCINT3);                  // Turn off PB3 as interrupt pin
     sleep_disable();                        // Clear SE bit
     adc_enable();                   		// ADC on
-    _delay_ms(SHORT_PRESS*10);
+    _delay_ms(SHORT_PRESS*10);				// test if the button is pressed long enough
 	if((PINB & (1 << PB3)))
 		shutDown = 0;
 	else
@@ -132,6 +136,7 @@ void loop()
 	if(shutDown == 0){
 		handleinput();
 		pwm_out(powerLevel[powerState]);
+		pwm_enable();
 	}
 	else
 		sleep();
