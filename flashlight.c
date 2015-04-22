@@ -120,7 +120,7 @@ void setup()
 	DDRB |= (1 << PB1);						//PB1 output for pwm
 	PORTB |= (1 << PB3);					//Enable button pullup resistor
 	shutDown = 1;
-	powerState = 1;
+	powerState = 0;
 }
 
 void loop()
