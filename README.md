@@ -2,4 +2,6 @@
 
 Flashlight code for attiny85 processor
 
-Code is under development
+To tune parameters, edit config.h
+
+To flash, edit programmer to Makefile and "make flash"
