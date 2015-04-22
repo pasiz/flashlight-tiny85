@@ -4,6 +4,7 @@
 void showVoltage() {
 	uint16_t millivolts;
 	uint8_t i;
+	pwm_out(powerLevel[0]);
 	millivolts = vcc();
 	pwm_disable();
 	_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
@@ -82,7 +83,7 @@ void sleep() {
     sleep_disable();                        // Clear SE bit
     init_adc();
     adc_enable();                   		// ADC on
-    _delay_ms(SHORT_PRESS * 10);
+    _delay_ms(SHORT_PRESS*10);
     shutDown = 0;
 } // sleep
 
