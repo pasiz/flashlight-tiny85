@@ -2,29 +2,29 @@
 
 #ifdef VOLTAGE_DISPLAY
 void showVoltage() {
-	uint16_t voltage;
-	uint8_t digits[4];
-	uint8_t x,y,i;
-	pwm_out(powerLevel[1]);
-	voltage = vcc();
+	uint16_t millivolts;
+	uint8_t i;
+	millivolts = vcc();
 	pwm_disable();
 	_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
-	for(i=3;i>0;i--){
-		digits[i] = voltage%10;
-		voltage /= 10;
+	i=millivolts / 1000;
+	while(i--){
+		pwm_enable();
+		_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
+		pwm_disable();
+		_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
 	}
-	for(x=0;x<3;x++){
-		for(y=0;y<digits[x];y++){
-			pwm_enable();
-			_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
-			pwm_disable();
-			_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
-		}
-		_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
+	_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
+	i=(millivolts / 100 )%10;
+	while(i--){
+		pwm_enable();
+		_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
+		pwm_disable();
+		_delay_ms(VOLTAGE_PULSE_WIDTH_MS);
 	}
+	_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
 	pwm_out(powerLevel[powerState]);
 	pwm_enable();
-	
 }
 #endif
 
@@ -80,12 +80,10 @@ void sleep() {
     cli();                                  // Disable interrupts
     PCMSK &= ~_BV(PCINT3);                  // Turn off PB3 as interrupt pin
     sleep_disable();                        // Clear SE bit
+    init_adc();
     adc_enable();                   		// ADC on
-    _delay_ms(SHORT_PRESS*10);				// test if the button is pressed long enough
-	if((PINB & (1 << PB3)))
-		shutDown = 0;
-	else
-		shutDown = 1;
+    _delay_ms(SHORT_PRESS * 10);
+    shutDown = 0;
 } // sleep
 
 ISR(PCINT0_vect) {
@@ -94,35 +92,30 @@ ISR(PCINT0_vect) {
 
 void init_adc()
 {
-	ADCSRA = (1<<ADPS2) | (1<<ADPS1); //125KHz.
-	ADMUX = ADMUX_VREF;
-	ADCSRA |= (1<<ADEN); 
-	_delay_ms(3);
+	ADMUX = ( 0 << REFS0 ) | ( 12 << MUX0 );
+	ADCSRA |= ( 1 << ADEN ); 
 }
 
 uint16_t vcc()
 {
+	init_adc();
+	uint8_t i=16;
 	uint16_t result=0;
-	int32_t intermediate=0;
-	ADCSRA |= (1<<ADSC);
-	while((ADCSRA & (1<<ADSC)) !=0);
-	ADCSRA |= (1<<ADSC); //start conv
-	while((ADCSRA & (1<<ADSC)) !=0);	//wait for conversion to be ready
-	result = ADC;
-	//vcc = 1024*vref/adc
-	intermediate = (ADCMAX*VREF) / result;
-	result=intermediate & 0xffff;
-	return (result);
+	while(i--)  {
+		ADCSRA |= (1<<ADSC); //start conv
+		while(bit_is_set(ADCSRA,ADSC));
+		//while((ADCSRA & (1<<ADSC)) !=0);	//wait for conversion to be ready
+	}
+	result = ADCW;
+	return 1125300L / result;
 }
 
 void setup()
 {
-	cli();
 	init_adc();
 	/*			PWM init			*/ 
-	TCCR0B |= (1 << CS01) | (1 << CS00);	//PWM prescale
-	TCCR0A |= (1 << WGM01) | (1 << WGM00);	//Fast pwm
-	TCCR0A |= (1 << COM0B1);				//clear OC0B output on compare, upward counting
+	TCCR0A = (1 << WGM00) | (1 << WGM01) | (1 << COM0B1); //fast pwm clear OC0B on compare
+	TCCR0B = (1 << CS00);
 	DDRB |= (1 << PB1);						//PB1 output for pwm
 	PORTB |= (1 << PB3);					//Enable button pullup resistor
 	shutDown = 1;
@@ -133,7 +126,7 @@ void loop()
 {
 	if(vcc() <= VOLTAGE_CUTOFF_MV)
 		shutDown = 1;
-	if(shutDown == 0){
+	if(!shutDown){
 		handleinput();
 		pwm_out(powerLevel[powerState]);
 		pwm_enable();

@@ -6,7 +6,11 @@ CFLAGS += -Wall -g -Os -mmcu=$(MCU)
 LDFLAGS +=
 OBJS = $(PROGRAM).o
 
-FUSES = -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+PROGRAMMER = usbasp -B 10
+#PROGRAMMER = avrisp -P /dev/ttyUSB0
+
+#FUSES = -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+FUSES = -F -U lfuse:w:0x62:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 
 AVRSIZE = avr-size
  
@@ -32,7 +36,7 @@ $(PROGRAM).hex: $(PROGRAM).elf
  
 flash: $(PROGRAM).hex
 	@printf "  FLASH   $(PROGRAM).hex\n"
-	$(Q)avrdude -c usbasp -p $(MCU) -B 10 -U flash:w:$(PROGRAM).hex $(FUSES)
+	$(Q)avrdude -c $(PROGRAMMER) -p $(MCU) -U flash:w:$(PROGRAM).hex $(FUSES)
 
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
