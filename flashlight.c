@@ -1,11 +1,18 @@
 #include "flashlight.h"
+#include "config.h"
 
 #ifdef VOLTAGE_DISPLAY
 void showVoltage() {
 	uint16_t millivolts;
 	uint8_t i;
-	pwm_out(powerLevel[0]);
+#ifdef MEASURE_VOLTAGE_DISCONNECTED
+	pwm_disable();
+	_delay_ms(VOLTAGE_RAISE_TIME_MS);
+#endif
 	millivolts = vcc();
+#ifndef USE_CURRENT_POWERLEVEL_VBLINK
+	pwm_out(powerLevel[VBLINK_POWERLEVEL]);
+#endif
 	pwm_disable();
 	_delay_ms(VOLTAGE_DIGIT_DELAY_MS);
 	i=millivolts / 1000;
@@ -45,9 +52,10 @@ void handleinput() {
 			break;
 			case SHUTDOWN_PRESS:
 				pwm_disable();
-				_delay_ms(10);
-				pwm_enable();
 				inputState = 3;
+			break;
+			case SHUTDOWN_PRESS+30:
+				pwm_enable();
 			break;
 			#ifdef VOLTAGE_DISPLAY
 			case VOLTAGE_PRESS:
@@ -56,7 +64,7 @@ void handleinput() {
 			break;
 			#endif
 		}
-		_delay_ms(10);
+		_delay_ms(1);
 	}
 	if(inputState == 1)
 		powerUp();
@@ -75,6 +83,7 @@ void sleep() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // replaces above statement
 
     sleep_enable();                         // Sets the Sleep Enable bit in the MCUCR Register (SE BIT)
+    sleep_bod_disable();
     sei();                                  // Enable interrupts
     sleep_cpu();                            // sleep
 
@@ -83,8 +92,9 @@ void sleep() {
     sleep_disable();                        // Clear SE bit
     init_adc();
     adc_enable();                   		// ADC on
-    _delay_ms(SHORT_PRESS*10);
     shutDown = 0;
+    pwm_out(powerLevel[powerState]);
+    pwm_enable();
 } // sleep
 
 ISR(PCINT0_vect) {
@@ -100,7 +110,7 @@ void init_adc()
 uint16_t vcc()
 {
 	init_adc();
-	uint8_t i=16;
+	uint8_t i=8;
 	uint16_t result=0;
 	while(i--)  {
 		ADCSRA |= (1<<ADSC); //start conv
@@ -117,7 +127,7 @@ void setup()
 	/*			PWM init			*/ 
 	TCCR0A = (1 << WGM00) | (1 << WGM01) | (1 << COM0B1); //fast pwm clear OC0B on compare
 	TCCR0B = (1 << CS00);
-	DDRB |= (1 << PB1);						//PB1 output for pwm
+	//DDRB |= (1 << PB1);						//PB1 output for pwm
 	PORTB |= (1 << PB3);					//Enable button pullup resistor
 	shutDown = 1;
 	powerState = 0;
@@ -132,6 +142,8 @@ void loop()
 		pwm_out(powerLevel[powerState]);
 		pwm_enable();
 	}
-	else
+	else{
 		sleep();
+		_delay_ms(LONG_PRESS + SHORT_PRESS);
+	}
 }

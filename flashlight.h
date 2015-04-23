@@ -4,7 +4,7 @@
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "config.h"
+
 
 #define adc_disable() (ADCSRA &= ~(1<<ADEN)) // disable ADC (before power-off)
 #define adc_enable()  (ADCSRA |=  (1<<ADEN)) // re-enable ADC

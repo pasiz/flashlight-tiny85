@@ -10,7 +10,10 @@ PROGRAMMER = usbasp -B 10
 #PROGRAMMER = avrisp -P /dev/ttyUSB0
 
 #FUSES = -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
-FUSES = -F -U lfuse:w:0x62:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+#FUSES = -F -U lfuse:w:0x62:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+
+#bod enable 1.8V
+FUSES = -U lfuse:w:0x62:m -U hfuse:w:0xde:m -U efuse:w:0xff:m
 
 AVRSIZE = avr-size
  
