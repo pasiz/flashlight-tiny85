@@ -24,6 +24,10 @@
 //Voltage cutoff in millivolts
 #define VOLTAGE_CUTOFF_MV		2800
 
+//Limited powerlevel on almost empty battery (specify in millivolts)
+//#define LIMIT_POWERLEVEL_BY_MV	3000
+//#define LIMIT_POWERLEVEL_POWERSTATE 3
+
 //power steps definitions
 #define POWER_STEPS		5
-const uint8_t powerLevel[] = { 2 , 8 , 30 , 100 , 255 };
+const uint8_t powerLevel[] = { 1 , 8 , 30 , 100 , 255 };

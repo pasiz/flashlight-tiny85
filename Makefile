@@ -13,7 +13,8 @@ PROGRAMMER = usbasp -B 10
 #FUSES = -F -U lfuse:w:0x62:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 
 #bod enable 1.8V
-FUSES = -U lfuse:w:0x62:m -U hfuse:w:0xde:m -U efuse:w:0xff:m
+FUSES = -U lfuse:w:0x62:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+
 
 AVRSIZE = avr-size
  

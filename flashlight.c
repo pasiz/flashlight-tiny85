@@ -1,5 +1,5 @@
 #include "flashlight.h"
-#include "config.h"
+
 
 #ifdef VOLTAGE_DISPLAY
 void showVoltage() {
@@ -54,7 +54,7 @@ void handleinput() {
 				pwm_disable();
 				inputState = 3;
 			break;
-			case SHUTDOWN_PRESS+30:
+			case SHUTDOWN_PRESS+50:
 				pwm_enable();
 			break;
 			#ifdef VOLTAGE_DISPLAY
@@ -126,8 +126,7 @@ void setup()
 	init_adc();
 	/*			PWM init			*/ 
 	TCCR0A = (1 << WGM00) | (1 << WGM01) | (1 << COM0B1); //fast pwm clear OC0B on compare
-	TCCR0B = (1 << CS00);
-	//DDRB |= (1 << PB1);						//PB1 output for pwm
+	TCCR0B = (1 << CS01);					// prescale /8
 	PORTB |= (1 << PB3);					//Enable button pullup resistor
 	shutDown = 1;
 	powerState = 0;
@@ -135,7 +134,7 @@ void setup()
 
 void loop()
 {
-	if(vcc() <= VOLTAGE_CUTOFF_MV)
+	if(vcc() < VOLTAGE_CUTOFF_MV)
 		shutDown = 1;
 	if(!shutDown){
 		handleinput();
@@ -146,4 +145,8 @@ void loop()
 		sleep();
 		_delay_ms(LONG_PRESS + SHORT_PRESS);
 	}
+#ifdef LIMIT_POWERLEVEL_BY_MV
+	if((vcc() <= LIMIT_POWERLEVEL_BY_MV) & (powerState > LIMIT_POWERLEVEL_POWERSTATE))
+		powerState = LIMIT_POWERLEVEL_POWERSTATE;
+#endif
 }
